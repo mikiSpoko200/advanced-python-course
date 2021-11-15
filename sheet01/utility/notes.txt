@@ -1,0 +1,38 @@
+Python class creation:
+    1. Resolve MRO entries.
+    2. Determine an appropriate metaclass.
+    3. Prepare class namespace.
+        namespace is created via call to the metaclass' `namespace = metaclass.__prepare__(name, bases, **kwargs)`.
+        Where `**kwargs` comes from class definition `class Foo(metaclass [, **kwargs])`. __prepare__ should
+        be implemented as classmethod. The `namespace` is passed to `__new__`, but when the final class object
+        is created the `namespace` is copied into a new `dict`.
+
+        If metaclass supplied doesn't have the __prepare__ attribute, then class namespace is initialized as an empty
+        ordered mapping.
+
+        See more: PEP 3115 https://www.python.org/dev/peps/pep-3115/
+
+    4. Execute class body
+    5. Create class object.
+
+
+
+
+Idea 1:
+    class can be tagged as one with ordered method calls by specifying a metaclass.
+
+    During class creation a class attribute would be created or perhaps __init__ would be wrapped in order to
+    all per instance list that would store information on function que.
+    Within class one would use a decorator to specify ordering.
+
+    In other words.
+    Every time we instantiate a class we would like to register said instance in some common registry and pari
+    it with function sequence.
+
+    Pros:
+        - More logically sound mechanism in terms of data dependency. Class oversees instance creation and can prepare
+        infrastructure needed per instance basis.
+        -
+
+Idea 2:
+    class decorator - maybe same as Idea 1.
