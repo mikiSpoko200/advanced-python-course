@@ -127,7 +127,7 @@ def _parenthesise(lhs: Expression, self: CompositeExpression, rhs: Expression) -
     str_builder = []
     for sub_expr in [lhs, rhs]:
         # An expression needs to be parenthesised if it has a:
-        #   - sub expression
+        #   - sub expression -- i.e. is of CompositeExpression type
         #   - lower priority that current root expression:
         if isinstance(sub_expr, get_args(CompositeExpression)) and OPERATOR_PRECEDENCE[type(sub_expr)] < root_prec:
             str_builder.append(f"({sub_expr})")
