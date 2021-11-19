@@ -5,9 +5,24 @@ from traits import Derive
 from abc import ABC, abstractmethod
 from primitives import ArithmeticValue, Value, IntValue
 
-# ===========================================
-# #####      ArithmeticExpressions      #####
-# ===========================================
+"""
+                                #===========================================#
+                                #           Arithmetic expressions          #
+                                #===========================================#
+
+This file contains basic expressions which are:
+    = ArithmeticExpression -- ABC that defines interface and functionality common among all arithmetic expressions.
+
+    - Constant      -- represent constant value literals need to be initialized with language values - see primitives.py
+    - Variables     -- variables that can have a value (see below Environment)
+    - Environment   -- dict-like lookup that stores (Variable, Value) pairs.
+                       New entries can be added using <Environment instance>[<Variable>] = <Value> (__getitem__ method).
+                       <Environment instance>[<Variable>] allows us to access stored <Value> for a <Variable>
+                       del Environment[<Variable>] allows for a removal of a Variable.
+    - Add           -- Expression that represents sum of two sub-expressions.
+    - Times         -- Expression that represents product of two sub-expressions.
+"""
+
 
 #  TODO:
 #    - add curring
@@ -17,6 +32,7 @@ from primitives import ArithmeticValue, Value, IntValue
 
 
 class ArithmeticExpression(ABC, Derive.Hash):
+    """Defines basic operations and default functionality for all Arithmetic expressions."""
     @abstractmethod
     def evaluate(self, environment: Environment) -> ArithmeticValue:
         """Evaluate self."""
@@ -28,9 +44,11 @@ class ArithmeticExpression(ABC, Derive.Hash):
         pass
 
     def __add__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
+        """Create a new expression that is a sum of lhs and self."""
         return Add(self, rhs)
 
     def __mul__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
+        """Create a new expression that is a product of lhs and self."""
         return Times(self, rhs)
 
     @staticmethod
@@ -58,6 +76,14 @@ class ArithmeticExpression(ABC, Derive.Hash):
 
                     - one variable    -- assume derivation with regard to that variable.
                     - many variables  -- raise DerivationError
+
+        author's remarks:
+            As of now -- 18:16 19.11 --
+            This is a very simple solution as it does not perform any reduction
+            of unnecessary nodes (subtask B basically).
+            So for example derivative(Add(Variable("x"), Constant(IntValue(1)))) ->
+                -> Add(Constant(IntValue(1)) + Constant(IntValue(0)))
+            I'l try to supply the optimizations until the end of the day.
         """
 
         def var_set(expr: ArithExpr) -> list[Var]:
@@ -197,6 +223,7 @@ class Times(ArithmeticExpression, Derive.PartialEq):
         return " * ".join(_parenthesize(self.lhs, self, self.rhs))
 
 
+# standard arithmetic operator precedence hierarchy.
 OPERATOR_PRECEDENCE: dict[type, int] = {Times: 3, Add: 2, Variable: 1, Constant: 1}
 
 
@@ -210,6 +237,7 @@ CompositeExpr = Union[Add, Times]       # -- an expression that has subexpressio
 
 
 class DerivationError(Exception):
+    """Exception raised when derivation operations cannot be performed."""
     def __init__(self, msg: str, *args) -> None:
         super().__init__(*args)
         self.msg = msg

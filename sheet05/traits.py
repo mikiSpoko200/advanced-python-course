@@ -1,8 +1,18 @@
+
+"""
+This file contains a classes that supply some default behaviour:
+    - Derive    -- groups classes that provide default implementations of some double underscore methods.
+"""
+
+
 class Derive:
-    """Class that provides meta-functions that automatically implement certain dunder methods."""
+    """collection of classes that when derived from automatically implement certain double underscore methods."""
 
     class Format:
-        """Default formatting."""
+        """Default __str__ implementations.
+
+        printing convention: <class name>([<attribute>, ]?)
+        """
         def __init_subclass__(cls, **kwargs):
             super().__init_subclass__(**kwargs)
 
@@ -26,9 +36,6 @@ class Derive:
         """Default implementation of __eq__.
         It requires that both self and other have exactly same attributes and values of said attributes.
         It does not care however about object types.
-
-        TODO: fix this garbage.
-        note: I coded this on the train that was running 3 hour late so circumstances were less than ideal.
         """
         def __init_subclass__(cls, **kwargs):
             super().__init_subclass__(**kwargs)

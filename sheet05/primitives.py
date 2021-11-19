@@ -3,10 +3,37 @@ from __future__ import annotations
 from typing import Union, Callable, Iterable, Any
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+from traits import Derive
 
-# ===========================================
-# #####    Primitive types and values   #####
-# ===========================================
+
+"""
+                            #============================================#
+                            ######    Primitive types and values    ######
+                            #============================================#
+
+This file contains primitive values and types.
+    As of now -- 18:19 19.11 -- only Arithmetic types needed for ex1c are implemented,
+    but im looking forward to adding more in my own spare time then I also will document
+    them more thoroughly.
+    
+    Why does this module even exist?
+        Well I could've simply used python default primitive types instead of creating these 
+        wrappers but that way I wouldn't learn anything more about how languages work.
+        Such distinction creates some abstract idea of value which is a result of evaluation.
+        Creating a public interface for values allows me for much higher flexibility.
+   
+   ABCs:
+    = Value             -- an abstract base class that defines what a value is and what are minimal
+                           requirements for an object to be considered a value.
+                           I decided that my language will be statically and strongly typed.
+                           I thought that it might be easier to implement that way.
+    = ArithmeticValue   -- an abstract base class that defines minimal functionality for objects
+                           that want to support basic arithmetic operations.
+    
+    - Type          -- Enumeration that contains all basic types.
+    - IntValue      -- a value that represents an integer.
+    - FloatValue    -- a value that represents a floating point number.
+"""
 
 
 _wrapped_type = Union[int, float, str, bool, Callable[..., Any], Iterable[Any]]
@@ -28,7 +55,7 @@ class TypeCheckError(Exception):
         self.received_type = received_type
         self.expected_type = expected_type
 
-    
+
 def type_check(value: Any, expected_type: type) -> None:
     if not isinstance(value, expected_type):
         received_type = type(value)
@@ -36,7 +63,8 @@ def type_check(value: Any, expected_type: type) -> None:
                              f"Incorrect type of value -- expected {expected_type} got {received_type}")
 
 
-class Value(ABC):
+class Value(ABC, Derive.PartialEq):
+    """Abstract base class for all Values."""
     def __init__(self, value: Union[int, float, str, bool, Callable, Iterable], value_type: Type) -> None:
         self._value = value
         self._value_type = value_type
@@ -55,6 +83,7 @@ class Value(ABC):
 
 
 class ArithmeticValue(Value):
+    """Abstract base class for all values that should support arithmetic operations."""
     @abstractmethod
     def __add__(self, rhs: ArithmeticValue) -> ArithmeticValue:
         """Overload of + operator."""
@@ -77,6 +106,7 @@ class ArithmeticValue(Value):
 
 
 class IntValue(ArithmeticValue):
+    """Value that represents an integer."""
     def __init__(self, value: int) -> None:
         type_check(value, int)
         super().__init__(value, Type.IntType)
@@ -99,6 +129,7 @@ class IntValue(ArithmeticValue):
 
 
 class FloatValue(ArithmeticValue):
+    """Value that represents a floating precision number."""
     def __init__(self, value: float) -> None:
         type_check(value, float)
         super().__init__(value, Type.FloatType)

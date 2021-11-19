@@ -1,12 +1,6 @@
 import unittest
 from expressions import *
 from primitives import IntValue
-from traits import Derive
-
-
-def add_partial_eq(cls: type) -> None:
-    cls.__class__ = type(cls.__name__ + "WithPartialEq", (Derive.PartialEq, cls), {})
-    print(cls.__eq__)
 
 
 class TestDerivative(unittest.TestCase):
@@ -26,7 +20,6 @@ class TestDerivative(unittest.TestCase):
 
     def test_add(self):
         expr = Add(Variable("x"), Constant(IntValue(1)))
-        print(ArithmeticExpression.derivative(expr), Add(Constant(IntValue(1)), Constant(IntValue(0))))
         self.assertTrue(ArithmeticExpression.derivative(expr) == Add(Constant(IntValue(1)), Constant(IntValue(0))))
 
     def test_times(self):
