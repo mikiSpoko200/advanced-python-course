@@ -1,28 +1,39 @@
-# ===========================================
-# #####           Exceptions            #####
-# ===========================================
+# -*- encoding: utf-8 -*-
 
-class LangException(Exception):
-    def __init__(self, callstack: list[str], line: str, column: str, msg: str):
-        self.callstack = callstack
-        self.line = line
-        self.column = column
+"""
+            #===========================================#
+            ######           Exceptions            ######
+            #===========================================#
+
+This file contains Language level Errors.
+"""
+
+
+class LangUndefinedSymbol(Exception):
+    """Exception Raised on failed symbol resolution. As of now raised only on failed variable lookup."""
+    def __init__(self, msg: str, *args):
+        super().__init__(*args)
         self.msg = msg
 
-
-class LangSyntaxError(LangException):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        raise NotImplementedError
+    def __str__(self) -> str:
+        return self.msg
 
 
-class LangUndefinedSymbol(LangException):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        raise NotImplementedError
+class LangZeroDivisionError(Exception):
+    """Exception Raised on zero division."""
+    def __init__(self, msg: str, *args):
+        super().__init__(*args)
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return self.msg
 
 
-class LangZeroDivisionError(LangException):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        raise NotImplementedError
+class LangDerivationError(Exception):
+    """Exception raised when derivation operations cannot be performed."""
+    def __init__(self, msg: str, *args) -> None:
+        super().__init__(*args)
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return self.msg
