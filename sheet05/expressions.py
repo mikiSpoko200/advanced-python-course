@@ -4,6 +4,7 @@ from typing import get_args, Union, Optional
 from traits import Derive
 from abc import ABC, abstractmethod
 from primitives import ArithmeticValue, Value, IntValue
+from exceptions import LangDerivationError, LangUndefinedSymbol, LangZeroDivisionError
 
 """
                                 #===========================================#
@@ -20,7 +21,9 @@ This file contains basic expressions which are:
                        <Environment instance>[<Variable>] allows us to access stored <Value> for a <Variable>
                        del Environment[<Variable>] allows for a removal of a Variable.
     - Add           -- Expression that represents sum of two sub-expressions.
+    - Subtract      -- Expression that represents difference of two sub-expressions.
     - Times         -- Expression that represents product of two sub-expressions.
+    - Division      -- Expression that represents division of two sub-expressions.
 """
 
 
@@ -31,7 +34,7 @@ This file contains basic expressions which are:
 #      idea: make a descriptor of some kind?
 
 
-class ArithmeticExpression(ABC, Derive.Hash):
+class ArithmeticExpression(ABC, Derive.PartialEq, Derive.Hash):
     """Defines basic operations and default functionality for all Arithmetic expressions."""
     @abstractmethod
     def evaluate(self, environment: Environment) -> ArithmeticValue:
@@ -44,12 +47,20 @@ class ArithmeticExpression(ABC, Derive.Hash):
         pass
 
     def __add__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
-        """Create a new expression that is a sum of lhs and self."""
+        """Create a new expression that is a sum of self and rhs."""
         return Add(self, rhs)
 
+    def __sub__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
+        """Create a new expression that is a difference of self and rhs."""
+        return Subtract(self, rhs)
+
     def __mul__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
-        """Create a new expression that is a product of lhs and self."""
+        """Create a new expression that is a product of self and rhs."""
         return Times(self, rhs)
+
+    def __truediv__(self, rhs: ArithmeticExpression) -> ArithmeticExpression:
+        """Create a new expression that is a result of division self by rhs."""
+        return Division(self, rhs)
 
     @staticmethod
     def derivative(expr: ArithExpr, var: Optional[Var] = None) -> ArithExpr:
@@ -91,7 +102,7 @@ class ArithmeticExpression(ABC, Derive.Hash):
 
             def wrapper(expr: ArithExpr, variables: set[Var]):
                 match expr:
-                    case Add(lhs, rhs) | Times(lhs, rhs):
+                    case Add(lhs, rhs) | Subtract(lhs, rhs) | Times(lhs, rhs) | Division(lhs, rhs):
                         return wrapper(lhs, variables) | wrapper(rhs, variables)
                     case Constant(_):
                         return variables
@@ -113,8 +124,13 @@ class ArithmeticExpression(ABC, Derive.Hash):
                     return Constant(IntValue(0))
                 case Add(lhs, rhs):
                     return derivative_with_regard_to(lhs, var) + derivative_with_regard_to(rhs, var)
+                case Subtract(lhs, rhs):
+                    return derivative_with_regard_to(lhs, var) - derivative_with_regard_to(rhs, var)
                 case Times(lhs, rhs):
                     return derivative_with_regard_to(lhs, var) * rhs + lhs * derivative_with_regard_to(rhs, var)
+                case Division(lhs, rhs):
+                    return (derivative_with_regard_to(lhs, var) * rhs
+                            - derivative_with_regard_to(rhs, var) * lhs) / (rhs * rhs)
 
         def infer_derivation_variable(expr: ArithExpr) -> Var:
             """Attempt to infer derivation variable."""
@@ -123,7 +139,7 @@ class ArithmeticExpression(ABC, Derive.Hash):
                 case [var]:
                     return var
                 case _:
-                    raise DerivationError(
+                    raise LangDerivationError(
                         f"Cannot infer derivation variable "
                         f"-- Passed expression contains {len(present_vars)} variable(s): {present_vars}, expected: 1."
                         "\nPlease specify it with optional argument `var`."
@@ -133,7 +149,7 @@ class ArithmeticExpression(ABC, Derive.Hash):
         return derivative_with_regard_to(expr, derv_var)
 
 
-class Variable(ArithmeticExpression, Derive.PartialEq, Derive.Hash):
+class Variable(ArithmeticExpression):
     """AST leaf that represents a variable. Variables can be evaluated by looking up value
     assigned to them in Environment that is passed as evaluate method argument.
     """
@@ -161,7 +177,11 @@ class Environment:
         self.lookup = entries
 
     def __getitem__(self, variable: Variable) -> ArithmeticValue:
-        return self.lookup[variable]
+        try:
+            return self.lookup[variable]
+        except KeyError as err:
+            raise LangUndefinedSymbol(f"Undefined symbol -- Cannot find variable {variable} in environment {self}.") \
+                from err
 
     def __setitem__(self, variable: Variable, value: ArithmeticValue):
         self.lookup[variable] = value
@@ -176,12 +196,12 @@ class Environment:
         return f"Environment({str(self.lookup)[1:-1]})"
 
 
-class Constant(ArithmeticExpression, Derive.PartialEq):
+class Constant(ArithmeticExpression):
     """AST leaf that represents a literal / constant value."""
 
     __match_args__ = ("value",)
 
-    def __init__(self, value: ArithmeticValue):
+    def __init__(self, value: ArithmeticValue) -> None:
         self.value = value
 
     def evaluate(self, environment: Environment) -> ArithmeticValue:
@@ -191,7 +211,7 @@ class Constant(ArithmeticExpression, Derive.PartialEq):
         return str(self.value)
 
 
-class Add(ArithmeticExpression, Derive.PartialEq):
+class Add(ArithmeticExpression):
     """AST node that represents sum of two other ArithmeticExpressions."""
 
     __match_args__ = ("lhs", "rhs")
@@ -205,6 +225,21 @@ class Add(ArithmeticExpression, Derive.PartialEq):
 
     def __str__(self) -> str:
         return " + ".join(_parenthesize(self.lhs, self, self.rhs))
+
+
+class Subtract(ArithmeticExpression):
+
+    __match_args__ = ("lhs", "rhs")
+
+    def __init__(self, lhs: ArithmeticExpression, rhs: ArithmeticExpression) -> None:
+        self.lhs = lhs
+        self.rhs = rhs
+
+    def evaluate(self, environment: Environment) -> ArithmeticValue:
+        return self.lhs.evaluate(environment) - self.rhs.evaluate(environment)
+
+    def __str__(self) -> str:
+        return " - ".join(_parenthesize(self.lhs, self, self.rhs))
 
 
 class Times(ArithmeticExpression, Derive.PartialEq):
@@ -223,8 +258,27 @@ class Times(ArithmeticExpression, Derive.PartialEq):
         return " * ".join(_parenthesize(self.lhs, self, self.rhs))
 
 
+class Division(ArithmeticExpression, Derive.PartialEq):
+    """AST node that represents product of two other ArithmeticExpressions."""
+
+    __match_args__ = ("lhs", "rhs")
+
+    def __init__(self, lhs: ArithmeticExpression, rhs: ArithmeticExpression):
+        self.lhs = lhs
+        self.rhs = rhs
+
+    def evaluate(self, environment: Environment) -> ArithmeticValue:
+        try:
+            return self.lhs.evaluate(environment) / self.rhs.evaluate(environment)
+        except LangZeroDivisionError as err:
+            raise LangDerivationError(err.msg + f" Division occurred in expr: {self}") from err
+
+    def __str__(self) -> str:
+        return " / ".join(_parenthesize(self.lhs, self, self.rhs))
+
+
 # standard arithmetic operator precedence hierarchy.
-OPERATOR_PRECEDENCE: dict[type, int] = {Times: 3, Add: 2, Variable: 1, Constant: 1}
+OPERATOR_PRECEDENCE: dict[type, int] = {Times: 3, Division: 3, Add: 2, Subtract: 2, Variable: 1, Constant: 1}
 
 
 # Type aliases for more concise annotations:
@@ -232,18 +286,8 @@ ArithExpr = ArithmeticExpression
 Var = Variable
 Env = Environment
 Const = Constant
-AtomicExpr = Union[Constant, Variable]  # -- an expression that has no subexpressions - leaf in the AST.
-CompositeExpr = Union[Add, Times]       # -- an expression that has subexpressions    - node in the AST.
-
-
-class DerivationError(Exception):
-    """Exception raised when derivation operations cannot be performed."""
-    def __init__(self, msg: str, *args) -> None:
-        super().__init__(*args)
-        self.msg = msg
-
-    def __str__(self) -> str:
-        return self.msg
+AtomicExpr = Union[Constant, Variable]                 # -- an expression that has no subexpressions - leaf in the AST.
+CompositeExpr = Union[Add, Subtract, Times, Division]  # -- an expression that has subexpressions    - node in the AST.
 
 
 def _parenthesize(lhs: ArithExpr, self: CompositeExpr, rhs: ArithExpr) -> tuple[str, str]:
@@ -268,8 +312,9 @@ def _parenthesize(lhs: ArithExpr, self: CompositeExpr, rhs: ArithExpr) -> tuple[
 
 
 def main():
-    expr = Times(Add(Variable("x"), Constant(IntValue(2))), Variable("x"))
+    expr = Variable("X") / Constant(IntValue(0))
     print(expr)
+    print(expr.evaluate(Environment({Variable("X"): IntValue(1)})))
     print(ArithmeticExpression.derivative(expr))
 
 

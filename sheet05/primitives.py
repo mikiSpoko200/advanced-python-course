@@ -4,6 +4,7 @@ from typing import Union, Callable, Iterable, Any
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from traits import Derive
+from exceptions import LangZeroDivisionError
 
 
 """
@@ -125,7 +126,10 @@ class IntValue(ArithmeticValue):
 
     def __truediv__(self, rhs: IntValue) -> IntValue:
         type_check(rhs, IntValue)
-        return IntValue(self._value // rhs._value)
+        try:
+            return IntValue(self._value // rhs._value)
+        except ZeroDivisionError as err:
+            raise LangZeroDivisionError(f"Attempted zero division.") from err
 
 
 class FloatValue(ArithmeticValue):
