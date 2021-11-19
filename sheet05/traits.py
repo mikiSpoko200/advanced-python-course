@@ -33,13 +33,10 @@ class Derive:
         def __init_subclass__(cls, **kwargs):
             super().__init_subclass__(**kwargs)
 
-            def key(self):
-                return tuple(vars(self))
-
             def default_eq(self, other) -> bool:
-                return ((attrs := self.__key()) == other.__key() and
-                        all(getattr(self, attr) == getattr(other, attr) for attr in attrs))
+                attrs_self = tuple(vars(self))
+                attrs_other = tuple(vars(other))
+                return attrs_self == attrs_other
 
-            cls.__key = key
             cls.__eq__ = default_eq
             return cls
