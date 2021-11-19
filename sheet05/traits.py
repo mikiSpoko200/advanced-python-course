@@ -37,7 +37,8 @@ class Derive:
                 return tuple(vars(self))
 
             def default_eq(self, other) -> bool:
-                return self.__key() == other.__key()
+                return ((attrs := self.__key()) == other.__key() and
+                        all(getattr(self, attr) == getattr(other, attr) for attr in attrs))
 
             cls.__key = key
             cls.__eq__ = default_eq
