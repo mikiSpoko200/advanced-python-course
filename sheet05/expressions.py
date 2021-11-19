@@ -150,7 +150,7 @@ class Environment:
         return f"Environment({str(self.lookup)[1:-1]})"
 
 
-class Constant(ArithmeticExpression):
+class Constant(ArithmeticExpression, Derive.PartialEq):
     """AST leaf that represents a literal / constant value."""
 
     __match_args__ = ("value",)
@@ -165,7 +165,7 @@ class Constant(ArithmeticExpression):
         return str(self.value)
 
 
-class Add(ArithmeticExpression):
+class Add(ArithmeticExpression, Derive.PartialEq):
     """AST node that represents sum of two other ArithmeticExpressions."""
 
     __match_args__ = ("lhs", "rhs")
@@ -181,7 +181,7 @@ class Add(ArithmeticExpression):
         return " + ".join(_parenthesize(self.lhs, self, self.rhs))
 
 
-class Times(ArithmeticExpression):
+class Times(ArithmeticExpression, Derive.PartialEq):
     """AST node that represents product of two other ArithmeticExpressions."""
 
     __match_args__ = ("lhs", "rhs")
