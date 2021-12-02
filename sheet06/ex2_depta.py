@@ -8,96 +8,110 @@ place periodically (e.g. every 1 minute).
 In this task we assume that page layout changes rarely, only individual elements of this layout are
 changed, so if the program detects a change, it must return only what has changed.
 
-What I learned for this lab:
-For quite some time a wanted to get into parallel/concurrent programming.
-I had a vague notion of the meaning of terms such as process, thread, coroutine
-asynchronous programming in particular term asyncIO which prevents programs from stalling
-on long IO operations such as awaiting for user input or network request.
+
+PLEASE NOTE:
+    This script has an command line interface - please type --help / -h to see more.
+    This script requires two external modules to be installed:
+        - BeautifulSoup4 - pip install bs4
+        - termcolor      - pip install termcolor
+    I supplied both virtual environment (.venv) containing said modules and a requirements.txt file.
 
 
-TODO: Do more reading on:
-    - file descriptors,
-    - epoll and select in async context
-
-
-My learning resources:
-introduction to asyncio in python: https://www.youtube.com/watch?v=3mb9jFAHRfw&ab_channel=PyConAU
-MSDN article broadly touching on the topic: https://docs.microsoft.com/en-gb/windows/win32/procthread/about-processes-and-threads?redirectedfrom=MSDN
-Simplified overview of async mechanism in rust:
- - https://youtu.be/ThjvMReOXYM
- - https://youtu.be/9_3krAQtD2k
-Chapter 10.5: "asyncio: Asynchronous I/O, Event Loop, and Concurrency Tools"
-of "the Python 3 Standard Library by Example".
-"""
-import itertools
-import os
-
-"""
 Program description:
     
     This program tracks 'changes' in websites on 60s basis.
-    
-    There are two mods of operation:
-        - text change only mode -- checks only for changes in pages text
-        - layout change         -- detects both changes in text and in it's layout on the page (HTML)
+    Command line interface expects a literal that represents the mode of operation in which the script
+    should function.
+    Currently there are two separate modes of operation:
+        - TEXT_MODE     -- annotated by either "text" or "t"
+        - LAYOUT_MODE   -- annotated by either "layout" or "l"
+    note: input is case insensitive.
+    See definition of OperationMode enum for more info.
+
+    User can also specify the file from which urls should be pulled. (.json format)
+    expected format:
+    {
+        "urls": [
+            "url1",
+            "url2",
+            "url3",
+            ...
+        ]
+    }
+
+    I prepared few sample files text.json and layout.json both are somewhat suitable
+    for specific types of operation.
+
+    Modes of operation differ in terms of what content do they check.
+        - TEXT_MODE     -- checks only for changes in pages text
+        - LAYOUT_MODE   -- detects both changes in text and in it's layout on the page (HTML)
+                           this can cause output to be very verbose so caution is advised.
     
     Webpage is represented by it's title parsed from HTMl on initial parsing and it's not updated even if title changes.
-    If webpage code does not contain title tag url is used instead.
+
+    In my implementation I use std lib module called sched which exposes
+    a general purpose blocking (by default) event loop.
+
+    Alternative solution to that would be using signal module which provides us with functionality
+    there we could use
+    signal.setitimer(signal.ITIMER_REAL, 60) -- this would every 60s schedule SIGALRM signal.
+    We could than add a signal handler with
+    signal.signal(signal.SIGALRM, <our function for checking webpages>)
+
+    But this unfortunately does not work under windows since windows does not provide SIGALRM signal.
 
 
-    1. Simple user interface that reads string representation of 
-    2. Coloring scheme based on the outcome of check:
-        - green -- change
-        - blue  -- no change
-        - red   -- error
-    5. Program holds a dictionary that matches website's url to its contents. On every iteration of main
-       even loop it fetches new content, compares results and acts accordingly.
-    6. In pure layout mode using only urllib will suffice but for text changes it would be much more convenient
-       to use BeautifulSoup.
-    7. As of now my contents revolved around using some kind of scheduler that invokes a check for each website
-       based on some clock. In case user specifies a lot of pages to track I imagine that program can choke due
-       to IO stalling and let's say one iteration of event loop takes 100s. I don't want my program to wait another 60s.
-       It should start working as soon as possible and notify end user about the delay.
-    7.1. A cool feature would be to allow user to specify priority levels for certain websites and based on that system textwrap.shorten
-       would prioritize checking these websites on time and in case of failure to keep up for the highest priority crash or sth?
+Regarding testing:
+    I found it very difficult to find a reliable website that can be used for testing.
+    Since test's must be reproducible and there wasn't any specification regarding the exact format
+    I took a liberty and decided that I'll test script manually and in the process came up with the urls
+    supplied in the filed mentioned above.
 
+
+What I learned for this lab:
+    For quite some time a wanted to get into parallel/concurrent programming.
+    I had a vague notion of the meaning of terms such as process, thread, coroutine
+    asynchronous programming in particular term asyncIO which prevents programs from stalling
+    on long IO operations such as awaiting for user input or network request.
+    However due to time constraints and fact that sheet 7 is about making this solution multi threaded
+    I settled on a synchronous blocking solution.
+
+    My learning resources:
+    introduction to asyncio in python:
+     - https://www.youtube.com/watch?v=3mb9jFAHRfw&ab_channel=PyConAU
+    MSDN article broadly touching on the topic:
+     - https://docs.microsoft.com/en-gb/windows/win32/procthread/about-processes-and-threads?redirectedfrom=MSDN
+    Simplified overview of async mechanism in rust:
+     - https://youtu.be/ThjvMReOXYM
+     - https://youtu.be/9_3krAQtD2k
+    Chapter 10.5: "asyncio: Asynchronous I/O, Event Loop, and Concurrency Tools"
+    of "the Python 3 Standard Library by Example".
 """
-
 
 import argparse
 import difflib
-import sched
 import enum
 import http_error_codes
+import os
+import sched
 import textwrap as tw
 from collections import defaultdict
-from bs4 import BeautifulSoup
+from datetime import datetime
 from json.decoder import JSONDecoder
 from typing import NamedTuple, Optional
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
-from datetime import datetime
+from urllib.request import Request, urlopen
+
+from bs4 import BeautifulSoup
 from termcolor import colored
 
 
-__VERSION__ = "0.0.1"
+__VERSION__ = "0.1.0"
 
-"""
-Alternative solution to that would be using signal module which provides us with functionality
-there we could use 
-signal.setitimer(signal.ITIMER_REAL, 60) -- this would every 60s schedule SIGALRM signal.
-We could than add a signal handler with 
-signal.signal(signal.SIGALRM, <our function for checking webpages>)
-
-But this unfortunately does not work under windows.
-
-We can however use the sched module included in standard library.
-
-However this solution will be blocking.
-"""
 
 scheduler = sched.scheduler()
 DEFAULT_DATETIME_FORMAT = "%d-%m-%Y %H:%M:%S"
+DEFAULT_CONFIG_FILE = "layout.json"
 CHECKING_PERIOD = 10
 
 # Adding such fake headers makes it more difficult for servers to detect that our it is in face python script
@@ -109,12 +123,14 @@ URL = str
 
 
 class WebsiteState(NamedTuple):
+    """Data struct that groups information about webpages state."""
     check_timestamp: str
     content: list[str]
     title: str
 
 
 class OperationMode(enum.Enum):
+    """Enumeration of different operation types."""
     TEXT_MODE = enum.auto()
     LAYOUT_MODE = enum.auto()
 
@@ -146,7 +162,7 @@ def schedule_website_check(
 
 
 def log_communicate(state: WebsiteState, communicat: str) -> None:
-    """Default stdio communicate logging template."""
+    """Default communicate logging template."""
     print(f"{state.check_timestamp} :: {communicat} :: {state.title}")
 
 
@@ -190,17 +206,6 @@ def process_content(content: list[str]) -> list[str]:
 def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteState]], *,
                   operation_mode: OperationMode) -> None:
     """Check for changes in a website that can be accessed via *url*.
-
-    TODO:
-        * Add description of actions taken when checking a website for the first time.
-            - Parsing for title -- add this field to the WebsiteState datastruct.
-        * Add status printing to the stdout.
-        *'. Maybe add coloring based on the outcome of check?:
-            - green  -- no change
-            - yellow -- a change
-            - red    -- some connection or access error.
-        * If connection for some reason failed don't retry -- already done -- no scheduling after failure.
-
     Check consists of:
      - fetching a webpage
      - comparing new website against its previous version -- previous state is stored in previous_state data structure.
@@ -216,7 +221,7 @@ def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteStat
 
     try:
         with urlopen(req) as response:
-            soup = BeautifulSoup(response.read(), features="html.parser")
+            soup = BeautifulSoup(response.read().decode("utf-8"), features="html.parser")
             if operation_mode is OperationMode.LAYOUT_MODE:
                 new_content = soup.prettify().splitlines(keepends=True)
             else:
@@ -261,8 +266,13 @@ def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteStat
         del website_state_lookup[url]
 
 
-def command_line_interface() -> OperationMode:
+def command_line_interface() -> tuple[OperationMode, Optional[str]]:
     parser = argparse.ArgumentParser(description="Track changes in websites.")
+    parser.add_argument(
+        "--config-file", "-c",
+        default=DEFAULT_CONFIG_FILE,
+        help="Allows to specify .json file from which program will attempt read urls.",
+    )
     parser.add_argument(
         "--operation-mode", "-o",
         type=OperationMode.from_str,
@@ -271,14 +281,17 @@ def command_line_interface() -> OperationMode:
              " - layout | l -- track changes to the layout of tha page"
     )
     namespace = parser.parse_args()
-    return namespace.operation_mode
+    return namespace.operation_mode, namespace.config_file
 
 
 def main():
-    operation_mode = command_line_interface()
+    operation_mode, config_file = command_line_interface()
+    if config_file is None:
+        config_file = DEFAULT_CONFIG_FILE
     website_state_lookup: dict[URL, Optional[WebsiteState]] = defaultdict(lambda: None)
-    print(f"Running web surveillance in {colored(operation_mode, color='cyan')}.")
-    with open("config.json", "r", encoding="utf-8") as urls:
+    print(f"Operation Mode      :: {colored(operation_mode, color='cyan')}")
+    print(f"Input file          :: {colored(config_file, color='cyan')}")
+    with open(config_file, "r", encoding="utf-8") as urls:
         for url in JSONDecoder().decode(urls.read())["urls"]:
             check_website(url, website_state_lookup, operation_mode=operation_mode)
         scheduler.run()
