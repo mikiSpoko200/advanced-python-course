@@ -16,7 +16,7 @@ import os
 import textwrap as tw
 from enum import Enum
 from termcolor import colored
-from ex2_depta import WebsiteState, ConfigInfo
+from main import WebsiteState, ConfigInfo
 
 
 class Communicates(Enum):
