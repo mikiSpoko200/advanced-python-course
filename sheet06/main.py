@@ -88,22 +88,21 @@ What I learned for this lab:
     of "the Python 3 Standard Library by Example".
 """
 
+from time import time
+
 import argparse
 import difflib
 import enum
 import http_error_codes
-import os
 import sched
-import textwrap as tw
+import user_interface as ui
 from collections import defaultdict
 from datetime import datetime
 from json.decoder import JSONDecoder
 from typing import NamedTuple, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-
 from bs4 import BeautifulSoup
-from termcolor import colored
 
 
 __VERSION__ = "0.1.0"
@@ -152,6 +151,12 @@ class OperationMode(enum.Enum):
             raise ValueError("Invalid string representation of OperationMode.")
 
 
+class ConfigInfo(NamedTuple):
+    """Data struct that groups configuration information."""
+    operation_mode: OperationMode
+    input: str
+
+
 def schedule_website_check(
         url: URL,
         website_state_lookup: dict[URL, Optional[WebsiteState]], *,
@@ -159,44 +164,6 @@ def schedule_website_check(
         delay: int = CHECKING_PERIOD) -> None:
     """Schedules website check in delay seconds."""
     scheduler.enter(delay, 1, check_website, (url, website_state_lookup), {"operation_mode": operation_mode})
-
-
-def log_communicate(state: WebsiteState, communicat: str) -> None:
-    """Default communicate logging template."""
-    print(f"{state.check_timestamp} :: {communicat} :: {state.title}")
-
-
-def log_initial(state: WebsiteState) -> None:
-    """Log information about initial website processing."""
-    log_communicate(state, colored("New website added  ", color="blue"))
-
-
-def log_error(state: WebsiteState, errmsg: str) -> None:
-    """Log information about request error."""
-    log_communicate(state, colored(f"ERROR :: {errmsg}", on_color="red"))
-
-
-def log_change(state: WebsiteState, changes: list[str]) -> None:
-    """Log information about website state change."""
-    log_communicate(state, colored("Changes detected   ", color="green"))
-    for change in changes:
-        if change[0] == "-" and change[:3] != "---":
-            change = colored(change, color="red")
-        if change[0] == "+" and change[:3] != "+++":
-            change = colored(change, color="green")
-        if change[:2] == "@@":
-            change = colored(change, color="blue")
-        print(tw.fill(
-            change,
-            width=os.get_terminal_size().columns - 10,
-            initial_indent="\t",
-            subsequent_indent="\t")
-        )
-
-
-def log_no_change(state: WebsiteState) -> None:
-    """Log information about website state change."""
-    log_communicate(state, colored("No changes detected", color="yellow"))
 
 
 def process_content(content: list[str]) -> list[str]:
@@ -220,7 +187,9 @@ def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteStat
     req = Request(url, headers=HTTPS_HEADER)
 
     try:
+        website_start = time()
         with urlopen(req) as response:
+            print(f"Fetching website took: {time() - website_start}s")
             soup = BeautifulSoup(response.read().decode("utf-8"), features="html.parser")
             if operation_mode is OperationMode.LAYOUT_MODE:
                 new_content = soup.prettify().splitlines(keepends=True)
@@ -236,19 +205,21 @@ def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteStat
 
             # logging for first check.
             if prev_state is None:
-                log_initial(curr_state)
+                ui.log_initial(curr_state)
             # actual comparison and appropriate logging.
             else:
+                start = time()
                 changes = list(difflib.unified_diff(
                     prev_state.content, curr_state.content,
                     "Previous version", "Current version",
                     prev_state.check_timestamp, curr_state.check_timestamp,
                     n=3
                 ))
+                print(f"Comparing took: {time() - start}s")
                 if changes:
-                    log_change(curr_state, changes)
+                    ui.log_change(curr_state, changes)
                 else:
-                    log_no_change(curr_state)
+                    ui.log_no_change(curr_state)
 
             # update state in global lookup.
             website_state_lookup[url] = curr_state
@@ -289,8 +260,7 @@ def main():
     if config_file is None:
         config_file = DEFAULT_CONFIG_FILE
     website_state_lookup: dict[URL, Optional[WebsiteState]] = defaultdict(lambda: None)
-    print(f"Operation Mode      :: {colored(operation_mode, color='cyan')}")
-    print(f"Input file          :: {colored(config_file, color='cyan')}")
+    ui.log_config(ConfigInfo(operation_mode, config_file))
     with open(config_file, "r", encoding="utf-8") as urls:
         for url in JSONDecoder().decode(urls.read())["urls"]:
             check_website(url, website_state_lookup, operation_mode=operation_mode)
