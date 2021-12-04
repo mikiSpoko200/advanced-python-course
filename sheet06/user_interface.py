@@ -12,11 +12,40 @@ __VERSION__ = "0.1.0"
 __AUTHOR__ = "Mikołaj Depta"
 
 
+import argparse
 import os
 import textwrap as tw
 from enum import Enum
+from typing import NamedTuple
 from termcolor import colored
-from main import WebsiteState, ConfigInfo
+from main import WebsiteState, OperationMode
+
+
+DEFAULT_CONFIG_FILE = "layout.json"
+
+
+class ConfigInfo(NamedTuple):
+    """Data struct that groups configuration information."""
+    operation_mode: OperationMode
+    input: str
+
+
+def command_line_interface() -> ConfigInfo:
+    parser = argparse.ArgumentParser(description="Track changes in websites.")
+    parser.add_argument(
+        "--config-file", "-c",
+        default=DEFAULT_CONFIG_FILE,
+        help="Allows to specify .json file from which program will attempt read urls.",
+    )
+    parser.add_argument(
+        "--operation-mode", "-o",
+        type=OperationMode.from_str,
+        help="Choose operation mode for this script:\n"
+             " - text | t   -- in this mode program tracks changes to the text contents of the website\n"
+             " - layout | l -- track changes to the layout of tha page"
+    )
+    namespace = parser.parse_args()
+    return ConfigInfo(namespace.operation_mode, namespace.config_file or DEFAULT_CONFIG_FILE)
 
 
 class Communicates(Enum):

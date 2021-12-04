@@ -90,7 +90,7 @@ What I learned for this lab:
 
 from time import time
 
-import argparse
+
 import difflib
 import enum
 import http_error_codes
@@ -110,7 +110,6 @@ __VERSION__ = "0.1.0"
 
 scheduler = sched.scheduler()
 DEFAULT_DATETIME_FORMAT = "%d-%m-%Y %H:%M:%S"
-DEFAULT_CONFIG_FILE = "layout.json"
 CHECKING_PERIOD = 10
 
 # Adding such fake headers makes it more difficult for servers to detect that our it is in face python script
@@ -149,12 +148,6 @@ class OperationMode(enum.Enum):
             return OperationMode.LAYOUT_MODE
         else:
             raise ValueError("Invalid string representation of OperationMode.")
-
-
-class ConfigInfo(NamedTuple):
-    """Data struct that groups configuration information."""
-    operation_mode: OperationMode
-    input: str
 
 
 def schedule_website_check(
@@ -237,33 +230,13 @@ def check_website(url: URL, website_state_lookup: dict[URL, Optional[WebsiteStat
         del website_state_lookup[url]
 
 
-def command_line_interface() -> tuple[OperationMode, Optional[str]]:
-    parser = argparse.ArgumentParser(description="Track changes in websites.")
-    parser.add_argument(
-        "--config-file", "-c",
-        default=DEFAULT_CONFIG_FILE,
-        help="Allows to specify .json file from which program will attempt read urls.",
-    )
-    parser.add_argument(
-        "--operation-mode", "-o",
-        type=OperationMode.from_str,
-        help="Choose operation mode for this script:\n"
-             " - text | t   -- in this mode program tracks changes to the text contents of the website\n"
-             " - layout | l -- track changes to the layout of tha page"
-    )
-    namespace = parser.parse_args()
-    return namespace.operation_mode, namespace.config_file
-
-
 def main():
-    operation_mode, config_file = command_line_interface()
-    if config_file is None:
-        config_file = DEFAULT_CONFIG_FILE
+    config = ui.command_line_interface()
     website_state_lookup: dict[URL, Optional[WebsiteState]] = defaultdict(lambda: None)
-    ui.log_config(ConfigInfo(operation_mode, config_file))
-    with open(config_file, "r", encoding="utf-8") as urls:
+    ui.log_config(config)
+    with open(config.input, "r", encoding="utf-8") as urls:
         for url in JSONDecoder().decode(urls.read())["urls"]:
-            check_website(url, website_state_lookup, operation_mode=operation_mode)
+            check_website(url, website_state_lookup, operation_mode=config.operation_mode)
         scheduler.run()
 
 

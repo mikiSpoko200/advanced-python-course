@@ -43,48 +43,82 @@ __AUTHOR__ = "Mikołaj Depta"
 __VERSION__ = "0.1.0"
 
 
-import argparse
-import threading
 import asyncio
-import urllib.parse
-import os
-from typing import NamedTuple
-from time import time
+import aiohttp
+import sheet06.user_interface
+import sheet06.http_error_codes
+from bs4 import BeautifulSoup
+from typing import Optional
+from sheet06.main import (OperationMode, URL, WebsiteState)
+
+
+# Basic idea: We want to create a Task for every request
+# and make it schedule itself again in the future.
+
+
+async def get_contents(url: URL, *, operation_mode: OperationMode) -> str:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            soup = BeautifulSoup(await response.read())
+            if operation_mode is OperationMode.TEXT_MODE:
+                return soup.get_text()
+            else:
+                return soup.prettify()
+
+
+def get_tasks(urls: list[URL], operation_mode: OperationMode) -> list[asyncio.Task]:
+    """Schedules tasks that downloads and parses urls."""
+    return [asyncio.create_task(get_contents(url, operation_mode=operation_mode)) for url in urls]
+
+
+async def check_websites(
+        urls: list[URL],
+        website_state_lookup: dict[URL, Optional[WebsiteState]], *,
+        operation_mode: OperationMode) -> None:
+    contents = await asyncio.gather(get_tasks(urls, operation_mode))
+    print(contents)
 
 
 async def main():
-    start = time()
-    urls = [
-        r"https://www.python.org/dev/peps/pep-0289/",
-        r"https://www.python.org/dev/peps/pep-0342/",
-        r"https://www.python.org/dev/peps/pep-0380/",
-        r"https://www.python.org/dev/peps/pep-0492/",
-        r"https://www.python.org/dev/peps/pep-0255/"
+    links = [
+        'https://www.python.org/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/tree/3.10/Lib/asyncio/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://www.python.org/psf/donations/',
+        'https://docs.python.org/3/bugs.html',
+        'https://www.sphinx-doc.org/',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/tree/3.10/Lib/asyncio/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://www.python.org/psf/donations/',
+        'https://docs.python.org/3/bugs.html',
+        'https://www.sphinx-doc.org/',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/tree/3.10/Lib/asyncio/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://www.python.org/psf/donations/',
+        'https://docs.python.org/3/bugs.html',
+        'https://www.sphinx-doc.org/',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://github.com/python/cpython/tree/3.10/Lib/asyncio/',
+        'https://github.com/python/cpython/blob/3.10/Doc/library/asyncio.rst',
+        'https://www.python.org/',
+        'https://www.python.org/psf/donations/',
+        'https://docs.python.org/3/bugs.html',
+        'https://www.sphinx-doc.org/'
     ]
-    urls = map(lambda x: urllib.parse.urlsplit(x), urls)
-    ports = [443 if url.scheme == "https" else 80 for url in urls]
-    readers = []
-    for url, port in zip(urls, ports):
-        reader, writer = await asyncio.open_connection(url.hostname, port, ssl=port == 443, )
-        query = (
-            f"HEAD {url.path or '/'} HTTP/1.0\r\n"
-            f"Host: {url.hostname}\r\n"
-            f"\r\n"
-        )
-
-        writer.write(query.encode('latin-1'))
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
-
-            line = line.decode('latin1').rstrip()
-            if line:
-                print(f'HTTP header> {line}')
-
-        # Ignore the body, close the socket
-        writer.close()
-
+    await check_websites(links, OperationMode.TEXT_MODE)
 
 
 asyncio.run(main())
