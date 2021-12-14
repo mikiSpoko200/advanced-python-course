@@ -46,7 +46,7 @@
     that changed. That way we'll be able to focus on what really matters in this assignment.
 
 
-# Comaprison:
+# Comparison:
 
    (.venv) PS > py ex2_Depta_async.py --operation-mode text --config large_input.json --try-sync True
     Operation Mode      :: TEXT_MODE
