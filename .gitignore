@@ -4,6 +4,7 @@ __pycache__/
 *.zip
 *.png
 *graded*
+*.db
 
 corrections
 .venv/
