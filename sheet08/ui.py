@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import argparse
 from enum import Enum, auto
-from typing import NamedTuple
-from abc import ABC
-
+from typing import NamedTuple, Any
+from abc import ABC, abstractmethod
+from calendar import IComponent
 
 # consider mapping
 # ui upon retreating user configuration can query a db layer for arguments that it should return
@@ -28,58 +28,19 @@ from abc import ABC
 # The way user would specify it would be left for the UI. This is nice.
 
 
-# Just a draft
 class IUIComponent(ABC):
     """Interface that allows to make classes configurable from UI."""
 
-    # implement all Operation variants
-    # implement help communicates
-
-    pass
-
-
-class ConvertibleEnum(Enum):
-    """Enum wrapper class that provides string conversion functionality."""
-
-    @staticmethod
-    def variants() -> list[str]:
-        """Return all possible enum variants in lowercase string representation."""
-        return list(map(str.lower, Operation._member_names_))
-
-    @classmethod
-    def from_string(cls, _: str) -> Operation:
-        """Create enum instance from appropriate string representation."""
-        lookup = { rep: value for rep, value in zip(Operation._member_names_, Operation.operation_list()) }
-        return lookup[_]
-
-
-class Component(ConvertibleEnum):
-    """Enumeration of all possible Components that this app can manage.
-    
-    TODO: in the future think how could this be automated.
-        e.g.: UI module would provide some interface that when implemented
-            would automatically add new classes to UI along with argument configuration.
-    """
-    EventType    = auto()
-    EventTypes   = auto()
-    Event        = auto()
-    Events       = auto()
-    Participant  = auto()
-    Participants = auto()
-
-
-class Operation(ConvertibleEnum):
-    """Enumeration of all possible operations that the app can perform."""
-    Display = auto()
-    Add     = auto()
-    Remove  = auto()
-    Update  = auto()
+    @abstractmethod
+    def get_arguments(self, arg_names: list[str]) -> dict[str, Any]:  # FIXME: replace Any with specific types.
+        """Return the dictionary of pairs <argument name>: <argument value>."""
+        raise NotImplementedError
 
 
 class Config(NamedTuple):
     """Data structure representing app's configuration."""
-    operation : Operation
-    component : Component
+    operation: str
+    component: str
 
 
 def CLI() -> Config:
@@ -100,10 +61,16 @@ def CLI() -> Config:
         - If used with Operation and Component  -- help for application of chosen Operation for the chosen Component.
 
     When activated prompts user to input data needed specify the json file with new information.
-    
+
     TODO Ideas for the future:
         --rollback
     """
+
+    # 1. Check what components are available.
+
+
+
+
     parser = argparse.ArgumentParser(
         description="Callendar that allows for scheduling of different types of events.")
     parser.add_argument("operation",

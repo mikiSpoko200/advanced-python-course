@@ -2,10 +2,23 @@
 # -*- encoding: utf-8 -*-
 
 
+"""Grand rework:
+
+While building components the meta-data is gathered on available calendar components.
+Results are compiled into an enumeration like thing - I don't think a default enum would be suitable
+since we need plain lowercase strings for choice in argparse.
+
+
+"""
+
+
+from __future__ import annotations
+
+
 """A Calendar app that allows for planing of the events with numerous participants.
 
 Command Line User Interface provides means to add, remove, update and 
-display currently sotred events, participants and pieces of information.
+display currently stored events, participants and pieces of information.
 
 VERSION 0.0.1:
     add, remove, update, display functionality for different Events, Participants and EventTypes.
@@ -25,15 +38,29 @@ __AUTHOR__ = "Mikołaj Depta"
 from dataclasses import dataclass
 from enum import Enum, auto
 from abc import ABC, abstractmethod
-from ui import Config, Operation, Component 
+# from ui import Config, Operation, Component
 
 
 class IComponent(ABC):
-    """Interface that defines minimal functionality of calendar component.
-    
-    TODO:
-        - in future add error handling via OperationStatus enum.
-    """
+    """Interface that defines minimal functionality of calendar component."""
+
+    __names: list[str] = list()
+
+    def __init_subclass__(cls, **kwargs):
+        """Register all subclasses as Components."""
+        IComponent.__names.append(cls.__name__.lower())
+
+    @staticmethod
+    def all() -> list[str]:
+        """Return all components."""
+        return IComponent.__names
+
+
+    @abstractmethod
+    @property
+    def arguments(self) -> list[str]:
+
+
 
     @abstractmethod
     def add(self, **kwargs) -> None:
@@ -54,5 +81,3 @@ class IComponent(ABC):
     def display(self, **kwargs) -> None:
         """Display component instance information."""
         pass
-
-

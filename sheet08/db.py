@@ -24,20 +24,7 @@ class Model(pw.Model):
         database = database
 
 
-class Register:
-    """Registers all subclasses as Components.
-
-    The information is used to automatically generate Components enum using enum's
-    functional API: https://docs.python.org/3/library/enum.html#functional-api
-    which is in turned used to fill choice argument of argparse.add_argument() in UI module.
-    """
-    names: list[str] = list()
-    
-    def __init_subclass__(cls, **kwargs):
-        Register.names.append(cls.__name__)
-
-
-class Participant(Model, Register):
+class Participant(Model):
     """Model for a participant."""
     id      = pw.AutoField(primary_key=True)
     name    = pw.TextField(null=False)
@@ -45,14 +32,14 @@ class Participant(Model, Register):
     email   = pw.TextField(null=False, unique=True)
 
 
-class EventType(Model, Register):
+class EventType(Model):
     """Model for a listing of different event types.
     This table is in one-to-many relation with Event table (many events can have the same type).
     Typically would use SQL enumeration by sqlite does implement those."""
     name = pw.TextField()
 
 
-class Event(Model, Register):
+class Event(Model):
     """Model for an event."""
     # TODO: Add on insert check if this event collides with current plans of any other user.
     id          = pw.AutoField(primary_key=True)
@@ -182,7 +169,7 @@ def display_event_type(event_type: str) -> None:
 
 
 def add_event_with_participants() -> None:
-
+    raise NotImplementedError
 
 
 def main():
