@@ -1,0 +1,6 @@
+colorama==0.4.4
+commonmark==0.9.1
+greenlet==1.1.2
+peewee==3.14.8
+Pygments==2.10.0
+rich==10.15.2
