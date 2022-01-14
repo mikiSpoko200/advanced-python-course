@@ -1,0 +1,15 @@
+Project idea:
+
+To create an online application for playing the game of Caravan from Fallout New Vegas.
+
+
+Rationale:
+
+Game of caravan is complicated enough to pose an interesting algorithmic challange.
+Initial version can be done using socketserver, asyncore and command line interface to display game interface
+More advanced one could be implemented with the use of django
+
+
+What I want to have in my project:
+
+multiplayer

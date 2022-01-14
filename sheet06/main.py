@@ -93,9 +93,9 @@ from time import time
 
 import difflib
 import enum
-import http_error_codes
+import src.http_error_codes
 import sched
-import user_interface as ui
+import src.user_interface as ui
 from collections import defaultdict
 from datetime import datetime
 from json.decoder import JSONDecoder
