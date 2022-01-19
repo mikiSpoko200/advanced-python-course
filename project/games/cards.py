@@ -31,19 +31,23 @@ class Deck(Iterable):
     """
 
     def __init__(self, cards: list[Card]) -> None:
-        self._cards = deque(cards)
+        self.__card_queue = deque(cards)
 
     def __iter__(self) -> Iterator[Card]:
         """Produce an iterator over the deck.
 
         Iteration is delegated to the composited deque object.
         """
-        return iter(self._cards)
+        return iter(self.__card_queue)
 
     def shuffle(self) -> None:
         """Shuffle the deck in place."""
-        random.shuffle(self._cards)
+        random.shuffle(self.__card_queue)
 
     def pop(self) -> Card:
         """Return a card from the top of the deck."""
-        return
+        return self.__card_queue.popleft()
+
+    def place_back(self, _: Card) -> None:
+        """Place a card at the bottom of the deck."""
+        self.__card_queue.append(_)

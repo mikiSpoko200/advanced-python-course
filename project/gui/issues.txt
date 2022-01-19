@@ -1,0 +1,36 @@
+# Listing of encountered problems:
+
+1. How to compose an item that implements interface and have the aggregating class implement said interface as well.
+
+Obvious solution is to implement methods that forward calls to composited class.
+This creates an issue however when the interface has some side effects (despite that in theory it shouldn't).
+
+Perhaps I should create an explicit base class that implements said interface and move the side effects into it.
+Here I find zen of python very confusing and not very helpful.
+
+On one hand 'explicit is better than implicit.' So in my case making user register a button should be better.
+But despite that Djagno does similar thing with Models. I guess that the user KNOWS and uses said class
+purposefully. In that case that again would point me to creating a class that simply allows us to register
+subclass instances. This is also even more generic. Nice.
+
+y in x.__dict__["y"] vs hasattr(x, y):
+So hasattr(x, y) does mro search for x in y ancestry whilst x.__dict__["y"] does not.
+
+2. Elegant solution for extending external classes.
+
+This issue came up while I was trying to implement IDefault for pygame.font.Font
+Is the interface the right way to go? It makes SENSE for default factory method
+to be bounded with the class that it operates on. But here we reach the limitations
+of python's object model. There is no analogous special class extension syntax like in C#.
+
+Well in python I can simply add a new class attribute in this case I do believe it would
+be a class method descriptor, but regardless I consider this solution ugly.
+
+Other thing that came to my mind was to create a wrapper of some sort that inherits
+from font.Font and just adds the interface implementation but there the issue
+of naming comes into play. Should I in a sense override the font. Font and use my internal
+implementation instead? Or be EXPLICIT and create a name that reflects the wrapping nature
+of this local class?
+
+Other con of the wrapping solution is the loss of class docstrings and perhaps others?
+Here functools.wraps rings a bell!
