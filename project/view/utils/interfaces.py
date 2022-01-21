@@ -10,7 +10,7 @@ This module provides common functionality for GUI objects.
 from abc import ABC, abstractmethod
 from typing import NamedTuple
 
-from gui.utils.types import RGB
+from view.utils.types import RGB
 
 
 class IDefault:

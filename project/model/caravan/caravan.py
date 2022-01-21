@@ -1,20 +1,32 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+
 
 """
-This module implements standard 52 card deck of French suited playing cards.
-With added functionality specific to the game of caravan.
+This module exposes logic of the game of caravan.
 
-# CODE STRUCTURE: consider making clean implementation of the deck for possible different games.
-who would I go about doing that?
-Should I prepare a generic cards and make some sort of wrappers around them in order to add game specific functionality?
+import Player
+
+
+Caravan:
+
+    GameTable:
+        Player1:
+            piles:
+                Pile:
+                    value
+                    cards:
+                        card:
+                            applied_face_cards
+        Player2:
+            --||--
+    Ante?
 """
-
-
+import functools
 import random
-from typing import NamedTuple, Iterable, Iterator
-from enum import Enum, auto
 from collections import deque
+from dataclasses import dataclass
+from enum        import Enum, auto
+from typing      import NamedTuple, Iterable, Iterator
 
 
 class Suit(Enum):
@@ -45,9 +57,9 @@ class Rank(Enum):
 
 class Card(NamedTuple):
     """Data structure representing a card."""
-    suit:  Suit
-    rank:  Rank
-    value: int
+    suit: Suit
+    rank: Rank
+    applied_face_cards: list[FaceCard]
 
 
 class NumericCard(Card):
@@ -62,7 +74,25 @@ class Ace(Card):
 
 class FaceCard(Card):
     """Data structure representing a face card."""
-    pass
+    def function(self):
+        pass
+
+
+class Pile:
+    _cards: list[Card]
+    _applied_face_cards: dict[int, list[Card]]
+
+    def append(self, _: Card) -> None:
+        """Append new card on top of the pile."""
+        self._cards.append(_)
+
+    def apply(self, function_card: FaceCard, card_position: int) -> None:
+        """Apply given function to a card with specified position."""
+        self._applied_face_cards[card_position].append(function_card)
+
+    @property
+    def value(self) -> int:
+        return functools.reduce(lambda card:)
 
 
 class Deck(Iterable):
@@ -93,3 +123,14 @@ class Deck(Iterable):
     def place_back(self, _: Card) -> None:
         """Place a card at the bottom of the deck."""
         self.__card_queue.append(_)
+
+
+class Player:
+    def __init__(self, piles: list[Pile]):
+        self.piles = piles
+
+
+class Game:
+    """Game of caravan object."""
+    def __init__(self) -> None:
+        raise NotImplementedError

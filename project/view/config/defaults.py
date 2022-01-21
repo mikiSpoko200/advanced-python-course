@@ -10,7 +10,7 @@ import pygame.display as disp
 # endregion
 
 # region Internal imports.
-import gui.utils.colors as colors
+import view.utils.colors as colors
 # endregion
 
 pygame.display.init()
@@ -29,7 +29,7 @@ class Colors(enum.Enum):
 
 
 # Fonts.
-FONT_PATH = r"gui/assets/fonts/upheavtt.ttf"
+FONT_PATH = r"view/assets/fonts/upheavtt.ttf"
 FONT_SIZE = 20
 USE_AA = False
 

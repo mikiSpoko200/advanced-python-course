@@ -39,3 +39,9 @@ Here functools.wraps rings a bell!
 
 https://stackoverflow.com/questions/14132789/relative-imports-for-the-billionth-time
 
+4. use of MVC pattern:
+
+notes on that:
+    - controler handles user input.
+    -
+

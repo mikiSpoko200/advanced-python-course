@@ -10,12 +10,12 @@ import pygame
 # endregion
 
 # region Internal imports
-import games.cards
-import gui.assets.cards
-from games.cards import Suit
-from gui.utils import colors
-from gui.config import defaults
-import gui.controls.buttons as buttons
+import model.caravan.cards
+import view.assets.cards
+from model.caravan.cards import Suit
+from view.utils import colors
+from view.config import defaults
+import view.controls.buttons as buttons
 # endregion
 
 # Configuration:
@@ -71,7 +71,7 @@ def main():
     """Main game loop."""
 
     # Load game assets.
-    BACKGROUND = pygame.image.load(F"gui/assets/background{WIDTH}x{HEIGHT}.png")
+    BACKGROUND = pygame.image.load(F"view/assets/background{WIDTH}x{HEIGHT}.png")
 
     button_group = pygame.sprite.Group(
         buttons.Button("START", lambda: print("START"), (200, 600)),
@@ -80,7 +80,7 @@ def main():
     )
 
     card_group = pygame.sprite.Group(
-        [gui.assets.cards.Card(games.cards.Card(Suit.SPADE, 10, rank), position) for
+        [view.assets.cards.Card(model.caravan.caravan.cards.Card(Suit.SPADE, 10, rank), position) for
          rank, position in
          zip(["2", "4", "7", "K", "10"], DRAW_POINTS)]
     )
