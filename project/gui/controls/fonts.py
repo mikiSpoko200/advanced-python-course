@@ -8,8 +8,8 @@ import pygame.font as font
 # endregion
 
 # region Internal imports.
-import view.utils.interfaces as gui_interfaces
-import view.config.defaults as defaults
+import gui.utils.interfaces as gui_interfaces
+import gui.config.defaults as defaults
 # endregion
 
 

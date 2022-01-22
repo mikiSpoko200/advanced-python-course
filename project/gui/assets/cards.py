@@ -19,14 +19,14 @@ from typing import Optional
 
 import pygame.sprite
 import pygame.surface
-import model.caravan.cards
+import games.caravan.cards
 
 # region Internal imports
-import view.controls.fonts
-import view.config.defaults as defaults
-import view.utils.interfaces as gui_interfaces
-from view.utils.interfaces import IDefault
-from view.utils.types import RGB, Position
+import gui.controls.fonts
+import gui.config.defaults as defaults
+import gui.utils.interfaces as gui_interfaces
+from gui.utils.interfaces import IDefault
+from gui.utils.types import RGB, Position
 # endregion
 
 
@@ -64,7 +64,7 @@ class Card(pygame.sprite.DirtySprite):
     """Card sprite."""
 
     def __init__(self,
-                 card: model.caravan.caravan.cards.Card,
+                 card: games.caravan.caravan.cards.Card,
                  position: Position,
                  width: int = defaults.Card.WIDTH.value,
                  height: int = defaults.Card.HEIGHT.value,
@@ -73,7 +73,7 @@ class Card(pygame.sprite.DirtySprite):
         self.__card = card
         self.__color_scheme = color_scheme or CardColorScheme.default()
         self.__current_color = self.__color_scheme.default_placement
-        self.__font_object = view.controls.fonts.Font.default()
+        self.__font_object = gui.controls.fonts.Font.default()
         # sprite implementation
         self.image = pygame.surface.Surface((width, height))
         self.rect = pygame.rect.Rect(position, (width, height))

@@ -17,10 +17,10 @@ import pygame.surface as surf
 # endregion
 
 # region Internal imports.
-import view.utils.interfaces as gui_interfaces
-import view.config.defaults as defaults
-from view.utils.types import RGB, Callback, Position
-from view.controls.fonts import Font
+import gui.utils.interfaces as gui_interfaces
+import gui.config.defaults as defaults
+from gui.utils.types import RGB, Callback, Position
+from gui.controls.fonts import Font
 # endregion
 
 
