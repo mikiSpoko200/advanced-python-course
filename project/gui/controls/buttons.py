@@ -1,30 +1,30 @@
 # -*- encoding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 This module contains buttons jo.
 """
 
 # OPTIMIZATION: Make sure to use DirtySprite, or otherwise minimize unnecessary drawing.
 
-# region STD lib imports.
+# STD lib imports
 import functools
 from typing import Optional
-# endregion
 
-# region Third party imports.
+# External imports
 import pygame.sprite
 import pygame.surface as surf
-# endregion
 
-# region Internal imports.
-import gui.utils.interfaces as gui_interfaces
+# Internal imports
+import interfaces as general_interfaces
+import gui.interfaces as gui_interfaces
 import gui.config.defaults as defaults
 from gui.utils.types import RGB, Callback, Position
 from gui.controls.fonts import Font
-# endregion
 
 
-class ButtonColorScheme(gui_interfaces.IDefault):
+class ButtonColorScheme(general_interfaces.IDefault):
     """Struct that contains button color scheme information.
 
     Scheme consist of 3 sets of foreground, background color pairs which correspond to the button's 3 states:
@@ -48,7 +48,7 @@ class ButtonColorScheme(gui_interfaces.IDefault):
         self.press_background = press_background
 
     @classmethod
-    def default(cls) -> gui_interfaces.IDefault:
+    def default(cls) -> ButtonColorScheme:
         return cls(
             defaults.Button.DEFAULT_FOREGROUND_COLOR.value,
             defaults.Button.DEFAULT_BACKGROUND_COLOR.value,

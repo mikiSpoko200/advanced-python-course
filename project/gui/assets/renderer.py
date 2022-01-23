@@ -4,14 +4,17 @@
 In this module reside function that where used to generate assets.
 """
 
-
-import utils.colors as colors
-import config.defaults as defaults
-import pygame.surface as surface
-import pygame.draw
+# STD lib imports
 import itertools as it
 import random
 
+# External imports
+import pygame.surface as surface
+import pygame.draw
+
+# Internal imports
+import gui.utils.colors as colors
+import gui.config.defaults as defaults
 
 width = defaults.WIDTH
 height = defaults.HEIGHT

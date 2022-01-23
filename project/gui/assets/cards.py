@@ -1,5 +1,6 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+
+from __future__ import annotations
 
 """This module contains sprite object for cards.
 
@@ -14,23 +15,22 @@ Cards should have animations of being moved.
 Cards should be selectable.
 """
 
+# STD lib imports
 from typing import Optional
 
-
+# External imports
 import pygame.sprite
 import pygame.surface
 import games.caravan.cards
 
-# region Internal imports
+# Internal imports
 import gui.controls.fonts
 import gui.config.defaults as defaults
-import gui.utils.interfaces as gui_interfaces
-from gui.utils.interfaces import IDefault
+import interfaces as general_interfaces
 from gui.utils.types import RGB, Position
-# endregion
 
 
-class CardColorScheme(gui_interfaces.IDefault):
+class CardColorScheme(general_interfaces.IDefault):
     """Struct that contains Card color scheme information.
 
     Scheme consist of 3 sets of color values which correspond to the card's 3 states:
@@ -50,7 +50,7 @@ class CardColorScheme(gui_interfaces.IDefault):
         self.incorrect_placement = incorrect_placement
 
     @classmethod
-    def default(cls) -> IDefault:
+    def default(cls) -> CardColorScheme:
         return cls(
             defaults.Card.BACKGROUND_COLOR.value,
             defaults.Card.DEFAULT_PLACEMENT_COLOR.value,
@@ -64,7 +64,7 @@ class Card(pygame.sprite.DirtySprite):
     """Card sprite."""
 
     def __init__(self,
-                 card: games.caravan.caravan.cards.Card,
+                 card: games.caravan.cards.Card,
                  position: Position,
                  width: int = defaults.Card.WIDTH.value,
                  height: int = defaults.Card.HEIGHT.value,
@@ -101,5 +101,7 @@ class Card(pygame.sprite.DirtySprite):
                 ),
             (card_x + defaults.Card.TEXT_X_MARGIN, card_y + defaults.Card.TEXT_Y_MARGIN))
 
+    # CODE STRUCTURE: this should be used as Event handler!
     def move(self, dx, dy):
         self.rect.move_ip(dx, dy)
+

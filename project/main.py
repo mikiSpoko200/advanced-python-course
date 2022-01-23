@@ -71,18 +71,12 @@ def main():
     """Main game loop."""
 
     # Load game assets.
-    BACKGROUND = pygame.image.load(F"gui/assets/background{WIDTH}x{HEIGHT}.png")
+    BACKGROUND = pygame.image.load(F"gui/assets/background.bmp")
 
     button_group = pygame.sprite.Group(
         buttons.Button("START", lambda: print("START"), (200, 600)),
         buttons.Button("DRAW", lambda: print("DRAW"), (400, 600)),
         buttons.Button("PLACE", lambda: print("PLACE"), (600, 600))
-    )
-
-    card_group = pygame.sprite.Group(
-        [gui.assets.cards.Card(games.caravan.caravan.cards.Card(Suit.SPADE, 10, rank), position) for
-         rank, position in
-         zip(["2", "4", "7", "K", "10"], DRAW_POINTS)]
     )
 
     while True:
@@ -122,7 +116,6 @@ def main():
             #     button.rect.center = (counter, 600)
             button.update()
         button_group.draw(SCREEN)
-        card_group.draw(SCREEN)
 
         pygame.display.flip()
         clock.tick(defaults.FRAMERATE)

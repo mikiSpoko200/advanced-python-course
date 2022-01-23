@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 
 GREY = 89, 89, 89
 LIGHT_GREY = 150, 150, 150

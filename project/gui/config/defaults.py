@@ -1,17 +1,15 @@
 # -*- encoding: utf-8 -*-
 
-# region STD lib imports
+# STD lib imports
 import enum
-# endregion
 
-# region Third party imports.
+# External imports
 import pygame
 import pygame.display as disp
-# endregion
 
-# region Internal imports.
+# Internal imports
 import gui.utils.colors as colors
-# endregion
+
 
 pygame.display.init()
 

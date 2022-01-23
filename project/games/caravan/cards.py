@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 
 """
 This module implements standard 52 card deck of French suited playing cards.
@@ -10,7 +9,7 @@ who would I go about doing that?
 Should I prepare a generic cards and make some sort of wrappers around them in order to add game specific functionality?
 """
 
-
+# STD lib imports
 import random
 from typing import NamedTuple, Iterable, Iterator
 from enum import Enum, auto

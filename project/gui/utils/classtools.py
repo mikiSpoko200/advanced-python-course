@@ -5,8 +5,11 @@ This module defines functions and classes to work with classes.
 """
 
 
-# URGENT: Verify that the sotred references do not mess with garbage collector!
+# URGENT: Verify that the sorted references do not mess with garbage collector!
 # FIXME: do some reading about the __new__ arguments and maybe find better way to do this.
+
+
+# External imports
 import pygame.font
 
 
