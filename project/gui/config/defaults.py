@@ -16,7 +16,7 @@ pygame.display.init()
 
 # Display.
 INFOOBJ = disp.Info()
-WIDTH, HEIGHT = 1210, 700  # INFOOBJ.current_w, INFOOBJ.current_h
+WIDTH, HEIGHT = 1450, 800  # INFOOBJ.current_w, INFOOBJ.current_h
 FRAMERATE = 60
 FULLSCREEN = False
 
@@ -28,21 +28,21 @@ class Colors(enum.Enum):
 
 # Fonts.
 FONT_PATH = r"gui/assets/fonts/upheavtt.ttf"
-FONT_SIZE = 20
+FONT_SIZE = 16
 USE_AA = False
 
 
 class Card(enum.Enum):
     """Default settings for a Card sprite."""
     DEFAULT_PLACEMENT_COLOR   = colors.GREY
-    CORRECT_PLACEMENT_COLOR   = colors.LIGHT_GREY
+    CORRECT_PLACEMENT_COLOR   = colors.LIGHT_GREEN
     INCORRECT_PLACEMENT_COLOR = colors.DIM_RED
     BACKGROUND_COLOR          = Colors.BACKGROUND.value
     WIDTH                     = 80
     HEIGHT                    = 125
     FONT                      = FONT_PATH
     FONT_SIZE                 = FONT_SIZE
-    BORDER_THICKNESS          = 8
+    BORDER_THICKNESS          = 6
     RECT_BORDER_RADIUS        = 12
     TEXT_X_MARGIN             = 10
     TEXT_Y_MARGIN             = 10

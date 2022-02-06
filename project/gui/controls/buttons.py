@@ -20,7 +20,7 @@ import pygame.surface as surf
 import interfaces as general_interfaces
 import gui.interfaces as gui_interfaces
 import gui.config.defaults as defaults
-from gui.utils.types import RGB, Callback, Position
+from gui.types import RGBA, Callback, Position
 from gui.controls.fonts import Font
 
 
@@ -34,12 +34,12 @@ class ButtonColorScheme(general_interfaces.IDefault):
     """
 
     def __init__(self,
-                 default_foreground: RGB,
-                 default_background: RGB,
-                 select_foreground: RGB,
-                 select_background: RGB,
-                 press_foreground: RGB,
-                 press_background: RGB) -> None:
+                 default_foreground: RGBA,
+                 default_background: RGBA,
+                 select_foreground: RGBA,
+                 select_background: RGBA,
+                 press_foreground: RGBA,
+                 press_background: RGBA) -> None:
         self.default_foreground = default_foreground
         self.default_background = default_background
         self.select_foreground = select_foreground
@@ -61,7 +61,7 @@ class ButtonColorScheme(general_interfaces.IDefault):
 
 # aesthetic: consider adding padding between braces and label.
 # NOTE: buttons brace border counts to the selected area.
-class Button(pygame.sprite.DirtySprite, gui_interfaces.ISelect, gui_interfaces.IPress):
+class Button(pygame.sprite.DirtySprite, gui_interfaces.ISelect, gui_interfaces.IPress, gui_interfaces.IDisabled):
     """Simple button.
 
     Button with much simpler styling options based on the ones found Cataclysm Dark Days Ahead
@@ -75,6 +75,7 @@ class Button(pygame.sprite.DirtySprite, gui_interfaces.ISelect, gui_interfaces.I
                  font_object: Font = None,
                  color_scheme: Optional[ButtonColorScheme] = None) -> None:
         super().__init__()
+        self._disabled = False
         self.label = label
         self.callback = callback
         self.is_pressed = False
@@ -100,9 +101,11 @@ class Button(pygame.sprite.DirtySprite, gui_interfaces.ISelect, gui_interfaces.I
         # used for collision detection.
         self.rect = pygame.rect.Rect(position, (width, height))
 
+    # region Base class overrides
     def update(self) -> None:
         label_surface = self.__font_object.render(self.label, defaults.USE_AA, *self.__current_color_scheme)
         self.image.blit(label_surface, (self.__render_offset, 0))
+    # endregion
 
     # Interface implementations
     # region ISelect
@@ -130,3 +133,14 @@ class Button(pygame.sprite.DirtySprite, gui_interfaces.ISelect, gui_interfaces.I
         self.selected()
     # endregion
 
+    # region IDisabled
+    @property
+    def is_disabled(self) -> bool:
+        return self._disabled
+
+    def disable(self) -> None:
+        self._disabled = True
+
+    def enable(self) -> None:
+        self._disabled = False
+    # endregion

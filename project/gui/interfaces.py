@@ -12,7 +12,7 @@ import enum
 import typing
 
 # Internal imports
-from gui.utils.types import RGB
+from gui.types import RGB
 
 
 class ISelect(abc.ABC):
@@ -85,4 +85,3 @@ class IDisabled(abc.ABC):
     def enable(self) -> None:
         """Enable responsiveness"""
         pass
-
